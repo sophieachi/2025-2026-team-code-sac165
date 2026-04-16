@@ -10,6 +10,7 @@ library(tidyverse)
 library(lubridate)
 library(readxl)
 library(patchwork)
+library(dplyr)
 
 ```
 
@@ -35,7 +36,11 @@ acc_summer <- bind_rows(
   acc_duml_shell,
   acc_ward_shell
 ) %>%
-  filter(Month %in% c(5,6,7,8,9))
+  dplyr::filter(Month %in% c(5,6,7,8,9)) %>%
+  mutate(Farm = factor(Farm,
+                       levels = c("CMAST",
+                                  "Ward Creek",
+                                  "DUML")))
 
 ggplot(acc_summer,
        aes(x = DateTime,
@@ -47,15 +52,17 @@ ggplot(acc_summer,
     "DUML" = "#729ECEFF",
     "Ward Creek" = "#67BF5CFF"
   )) +
+  guides(color = guide_legend(override.aes = list(linewidth = 10))) +
   labs(
-    title = "Total Acceleration at CMAST, DUML, and Ward Creek",
+    title = "Mechanical Energy Characterized at CMAST, Ward Creek, and DUML",
     x = "Date",
-    y = "Sum Acceleration (G)",
-    color = "Farm"
+    y = "Total Acceleration (G)",
+    color = "Site"
   ) +
-  theme_minimal()
-
-ggsave("acceleration.jpeg")
+  theme_minimal() +
+  theme(
+  panel.border = element_rect(color = "#767676", fill = NA, linewidth = 0.4)
+) 
 
 ```
 
@@ -71,46 +78,84 @@ load_do <- function(file, farm){
       Farm = farm,
       Month = month(DateTime)
     ) %>%
-    select(DateTime, Farm, DO, Month)
+    select(DateTime, Farm, DO, Temp_C, Month)
 }
 
 stump_do  <- load_do("C:/Users/annab/OneDrive/Desktop/Cleaned/StumpSound_DO_Cleaned.xlsx", "Stump Sound")
 nelson_do <- load_do("C:/Users/annab/OneDrive/Desktop/Cleaned/Nelson_DO_Cleaned.xlsx", "Nelson Bay")
 
 do_summer <- bind_rows(stump_do, nelson_do) %>%
-  filter(Month %in% c(5, 6, 7, 8, 9))
+  dplyr::filter(Month %in% c(5, 6, 7, 8, 9)) %>%
+  mutate(Farm = factor(Farm,
+                       levels = c("Stump Sound",
+                                  "Nelson Bay")))
 
 # plot
 ggplot(do_summer,
        aes(x = DateTime, y = DO, color = Farm)) +
   geom_line() +
-  geom_rect(
-  inherit.aes = FALSE,
-  xmin = as.POSIXct("2025-06-01"),
-  xmax = as.POSIXct("2025-07-01"),
-  ymin = -Inf,
-  ymax = Inf,
-  fill = "lightgray",
-  alpha = 0.2
-) +
-  scale_color_manual(values = c(
-    "Stump Sound" = "#FF9E4AFF",
-    "Nelson Bay"  = "#AD8BC9FF"
-  )) +
-  labs(
-    title = "Dissolved Oxygen at Nelson Bay and Stump Sound",
-    x = "Date",
-    y = "Dissolved Oxygen (mg/L)",
-    color = "Farm"
-  ) +
-  theme_minimal()
 
-ggsave("DONelsonStump.jpeg")
+  scale_color_manual(values = c(
+    "Nelson Bay"  = "#AD8BC9FF",
+    "Stump Sound" = "#FF9E4AFF"
+  )) +
+
+guides(color = guide_legend(override.aes = list(linewidth = 10
+  ))) +
+
+  labs(
+    title = "Full Summer DO at Stump Sound and Nelson Bay",
+    x = "Date",
+    y = "DO (mg/L)",
+    color = "Site") +
+
+  theme_minimal() +
+  theme(
+  panel.border = element_rect(color = "#767676", fill = NA, linewidth = 0.4)
+)
+
+```
+
+```{r}
+
+vline_df <- data.frame(
+  Variable = "DO",
+  DateTime = as.POSIXct("2025-06-15")
+)
+
+ggplot(do_summer,
+       aes(x = DateTime, y = Temp_C, color = Farm)) +
+      geom_line() +
+  geom_vline(data = vline_df,
+             aes(xintercept = DateTime),
+             color = "black",
+             linewidth = 0.8) +
+  
+  scale_color_manual(values = c(
+    "Nelson Bay"  = "#AD8BC9FF",
+    "Stump Sound" = "#FF9E4AFF"
+  )) +
+  
+  labs(
+    x = NULL,
+    y = NULL,
+    color = "Site"
+  ) +
+  guides(color = guide_legend(override.aes = list(linewidth = 10
+  ))) +
+  
+  theme_minimal() +
+  theme(
+    panel.border = element_rect(color = "#767676",
+                                fill = NA,
+                                linewidth = 0.4)
+  )
 
 ```
 
 
-```{r cmast}
+ 
+```{r}
 
 # load data
 cmast_do_25 <- read_excel("C:/Users/annab/OneDrive/Desktop/Cleaned/CMAST_DO_Cleaned.xlsx") %>%
@@ -144,7 +189,8 @@ cmast_sal_25 <- read_excel("C:/Users/annab/OneDrive/Desktop/Cleaned/CMAST_Con_Cl
   ) %>%
   select(OverlayTime, Year, Salinity)
 
-cmast_precip_25 <- read_excel("C:/Users/rerob/Desktop/Bass/summer-2026-visualization-tool-main/Cleaned/CMAST_Precip_Cleaned.xlsx") %>%
+cmast_precip_25 <- read_excel("C:/Users/annab/OneDrive/Desktop/Cleaned/CMAST_Precip_Cleaned.xlsx") %>%
+  mutate(DateTime = ymd_hms(DateTime)) %>%
   filter(month(DateTime) %in% c(5,6,7,8,9,10)) %>%
   mutate(
     Year = 2025,
@@ -185,7 +231,8 @@ cmast_sal_24 <- read_excel("C:/Users/annab/OneDrive/Desktop/Salinity_2024.xlsx")
   ) %>%
   select(OverlayTime, Year, Salinity)
 
-cmast_precip_24 <- read_excel("C:/Users/rerob/Desktop/Bass/summer-2026-visualization-tool-main/2024 Datasets/Precipdaily_2024.xlsx") %>%
+cmast_precip_24 <- read_excel("C:/Users/annab/OneDrive/Desktop/Cleaned/Precipdaily_2024.xlsx") %>%
+  mutate(DateTime = ymd_hms(DateTime)) %>%
   filter(month(DateTime) %in% c(5,6,7,8,9,10)) %>%
   mutate(
     Year = 2024,
@@ -229,7 +276,7 @@ cmast_all <- bind_rows(do_long, ph_long, sal_long, precip_long)
 
 cmast_all$Parameter <- factor(
   cmast_all$Parameter,
-  levels = c("Temperature", "Dissolved Oxygen", "pH", "Salinity", "Precipitation")
+  levels = c("Temperature", "Dissolved Oxygen", "Precipitation", "pH", "Salinity")
 )
 
 cmast_all <- cmast_all %>%
@@ -240,20 +287,32 @@ cmast_all <- cmast_all %>%
                              "Salinity" = "Salinity",
                              "pH" = "pH",
                              "Precipitation" = "Precipitation"),
-    ColorGroup = paste0(Parameter_short, "_", Year)
+    ColorGroup = paste0(Parameter_short, " (", Year, ")")
+  ) %>%
+  mutate(
+    ColorGroup = factor(
+      ColorGroup,
+      levels = c(
+        "Temperature (2024)", "Temperature (2025)",
+        "DO (2024)", "DO (2025)",
+        "Precipitation (2024)", "Precipitation (2025)",
+        "pH (2024)", "pH (2025)",
+        "Salinity (2024)", "Salinity (2025)"
+      )
+    )
   )
 
   color_palette <- c(
-    "Salinity_2024" = "#729ECEFF", 
-    "Salinity_2025" = "#ED665DFF", 
-    "Temperature_2024" = "#67BF5CFF", 
-    "Temperature_2025" = "#ED97CAFF", 
-    "pH_2024" = "#AD8BC9FF", 
-    "pH_2025" = "#CDCC5DFF", 
-    "DO_2024" = "#A8786EFF", 
-    "DO_2025" = "#FF9E4AFF",
-    "Precipitation_2024" = "#BAB0AC",
-    "Precipitation_2025" = "#A8C5DA"
+    "Temperature (2024)" = "#67BF5CFF", 
+    "Temperature (2025)" = "#ED97CAFF",
+    "DO (2024)" = "#A8786EFF", 
+    "DO (2025)" = "#FF9E4AFF",
+    "Precipitation (2024)" = "#AD8BC9FF",
+    "Precipitation (2025)" = "#6DCCDAFF",
+        "pH (2024)" = "#767676", 
+    "pH (2025)" = "#CDCC5DFF",
+    "Salinity (2024)" = "#729ECEFF", 
+    "Salinity (2025)" = "#ED665DFF"
   )
 
 ggplot(cmast_all,
@@ -263,83 +322,321 @@ ggplot(cmast_all,
            group = ColorGroup)) +
   geom_line() +
   scale_color_manual(values = color_palette) +
-  scale_x_datetime(date_labels = "%b %d", limits = as.POSIXct(c("2000-05-01", "2000-10-01"))) +
+  scale_x_datetime(
+  date_breaks = "1 month",
+  date_labels = "%b"
+) +
+  guides(color = guide_legend(override.aes = list(linewidth = 10))) +
   labs(
-    x = "Date",
+    x = NULL,
     y = NULL,
-    color = "Parameter & Year"
+    color = "Parameter by Year"
   ) +
   facet_wrap(~ Parameter,
            scales = "free",
            ncol = 2,
            dir = "v") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+  panel.border = element_rect(color = "#767676", fill = NA, linewidth = 0.4)
+) +
+  theme(legend.position = "none")
 
 # ggsave("cmast.jpeg")
+
+```
+
+```{r}
+
+library(ggplot2)
+
+SurvivalSummary$Site <- recode(SurvivalSummary$Site,
+                               "DAF" = "DUML",
+                               "StumpSound" = "Stump Sound")
+
+AllSites$Site <- recode(AllSites$Site,
+                        "DAF" = "DUML",
+                        "StumpSound" = "Stump Sound")
+
+SurvivalSummary$Site <- factor(
+  SurvivalSummary$Site,
+  levels = c("Ward Creek", "Nelson Bay", "DUML", "Stump Sound", "CMAST")
+)
+
+AllSites$Site <- factor(
+  AllSites$Site,
+  levels = c("Ward Creek", "Nelson Bay", "DUML", "Stump Sound", "CMAST")
+)
+
+PrettySurvival <- ggplot(SurvivalSummary,
+                         aes(x = Date,
+                             y = mean_surv,
+                             color = Site,
+                             group = Site)) +
+
+geom_point(data = AllSites,
+           aes(x = Date,
+               y = Survivorship,
+               color = Site),
+           alpha = 0.12,
+           size = 3,
+           inherit.aes = FALSE) +
   
+  # Error bars (mean ± SD)
+  geom_errorbar(aes(ymin = mean_surv - sd_surv,
+                    ymax = mean_surv + sd_surv),
+                width = 5,
+                linewidth = 0.9,
+                alpha = 0.6) +
+  
+  # Mean line
+  geom_line(linewidth = 1.5) +
+  
+  # Mean points
+  geom_point(size = 3) +
+  
+  coord_cartesian(ylim = c(20, 100)) +
+  
+  scale_color_manual(values = c(
+  "CMAST" = "#ED665DFF",
+  "DUML" = "#729ECEFF",
+  "Ward Creek" = "#67BF5CFF",
+  "Nelson Bay"  = "#AD8BC9FF",
+  "Stump Sound" = "#FF9E4AFF"
+)) +
+  
+  labs(x = NULL,
+       y = NULL,
+       color = "Site") +
+  guides(color = guide_legend(override.aes = list(linewidth = 10))) +
+  
+  scale_x_date(date_breaks = "1 month",
+               date_labels = "%b") +
+  theme_minimal() +
+  theme(
+  panel.border = element_rect(color = "#767676", fill = NA, linewidth = 0.4)
+) 
+
+PrettySurvival
+
+ggsave("survival.jpeg")
+
+```
+
+```{r}
+
+#Library import
+
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(GGally)
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(writexl)
+library(tidyr)
+library(hms)
+library(zoo)
+library(grid)
+library(patchwork)
+
+#Importing growth data
+DAFGrowthSheet <- read_excel("C:/Users/annab/Downloads/Growth_12Nov25Filtered.xlsx", sheet = "DUML")
+CMTGrowthSheet <- read_excel("C:/Users/annab/Downloads/Growth_12Nov25Filtered.xlsx", sheet = "CMAST")
+WCGrowthSheet <- read_excel("C:/Users/annab/Downloads/Growth_12Nov25Filtered.xlsx", sheet = "Ward Creek")
+
+
+#Turn the sheets into a  combined and separate dataframe set
+DAFGrowth <- as.data.frame(DAFGrowthSheet)
+CMTGrowth <- as.data.frame(CMTGrowthSheet)
+WCGrowth <- as.data.frame(WCGrowthSheet)
+
+combined_growth <- bind_rows(WCGrowth, CMTGrowth, DAFGrowth)
+
+#Filtering out baby oysters under 60mm
+combined_growth_filtered <- combined_growth[combined_growth$L_mm >= 60,]
+
+# Boxplot function:
+generate_boxplots <- function(dataframe) {
+  # Check if the required columns are present in the dataframe
+  if (!all(c("Strain", "Stage", "L_mm") %in% colnames(dataframe))) {
+    stop("The dataframe must contain 'Strain', 'Stage', and 'L_mm' columns.")
+  }
+  
+  #Factor stage and strain so they display in proper order
+  dataframe$Stage <-factor(dataframe$Stage, levels = c("May", "July", "September"))
+  
+  dataframe$Stage <- recode(dataframe$Stage,
+                               "July" = "Jul",
+                            "September" = "Sep"
+                  )
+  
+  dataframe$Site <- recode(dataframe$Site,
+                               "Duke Aquafarm" = "DUML")
+  
+  # Create a box plot for each combination of color and month
+  p <- ggplot(dataframe, aes(x = Stage, y = L_mm, fill = Site)) +
+    geom_boxplot() +
+    scale_fill_manual(values = c("CMAST" = "#ED665DFF", "DUML" = "#729ECEFF", "Ward Creek" = "#67BF5CFF")) +
+    labs(x = NULL, y = NULL) +
+    facet_grid(.~ Site)  # This line creates separate panels for each unique color
+  
+  return(p)
+}
+
+GrowthSites <- generate_boxplots(combined_growth_filtered)   #[combined_growth_filtered$Strain == 'Triploid',])
+
+GrowthSites +
+  theme_minimal() +
+  theme(
+  panel.border = element_rect(color = "#767676", fill = NA, linewidth = 0.4)
+) +theme(legend.position = "none")
+
+GrowthSites
+
+ggsave("growth sites.jpeg", plot = GrowthSites)
+
+
+
+```
+
+```{r}
+
+#Library import
+
+library(ggplot2)
+library(readr)
+library(dplyr)
+library(GGally)
+library(tidyverse)
+library(lubridate)
+library(readxl)
+library(writexl)
+library(tidyr)
+library(hms)
+library(zoo)
+library(grid)
+library(patchwork)
+
+SurvivorshipSheet <- "C:/Users/annab/OneDrive/Desktop/Bass Mortality S26_2.xlsx"
+SurvivorshipSheetWC <- read_excel(SurvivorshipSheet, sheet = "Ward Creek")
+SurvivorshipSheetCMT <- read_excel(SurvivorshipSheet, sheet = "CMAST")
+SurvivorshipSheetDAF <- read_excel(SurvivorshipSheet, sheet = "Duke Aquafarm")
+SurvivorshipSheetStump <- read_excel(SurvivorshipSheet, sheet = "Stump Sound")
+SurvivorshipSheetNelson <- read_excel(SurvivorshipSheet, sheet = "Nelson Bay")
+
+SurvivorshipWC <- as.data.frame(SurvivorshipSheetWC)
+SurvivorshipCMT <- as.data.frame(SurvivorshipSheetCMT)
+SurvivorshipDAF <- as.data.frame(SurvivorshipSheetDAF)
+SurvivorshipStump <- as.data.frame(SurvivorshipSheetStump)
+SurvivorshipNelson <- as.data.frame(SurvivorshipSheetNelson)
+
+#Setting site and combining dataframes:
+SurvivorshipWC$Source <- "Ward Creek"
+SurvivorshipCMT$Source <- "CMAST"
+SurvivorshipDAF$Source <- "Duke Aquafarm"
+SurvivorshipStump$Source <- "Stump Sound"
+SurvivorshipNelson$Source <- "Nelson Bay"
+
+SurvivorshipWC$BagTag <- as.character(SurvivorshipWC$BagTag)
+SurvivorshipCMT$BagTag <- as.character(SurvivorshipCMT$BagTag)
+SurvivorshipDAF$BagTag <- as.character(SurvivorshipDAF$BagTag)
+SurvivorshipStump$BagTag <- as.character(SurvivorshipStump$BagTag)
+SurvivorshipNelson$BagTag <- as.character(SurvivorshipNelson$BagTag)
+
+#Combining data, binning by month
+
+S_Combined <- bind_rows(SurvivorshipWC, SurvivorshipCMT, SurvivorshipDAF, SurvivorshipStump, SurvivorshipNelson)
+S_Combined$Month <- month(S_Combined$Date, label = TRUE)
+
+S_Combined$Strain <- recode(S_Combined$Strain,
+                        "New River" = "NR",
+                        "Stump Sound" = "SS",
+                        "Cedar Island" = "CI")
+
+#Function
+Mortality <- function(dframe) {
+  splot = ggplot(dframe, aes(x = Month, y = Mortality_Count, fill = Strain)) +  #Swap "Strain" to "Source" as needed
+    ylim(0, 15) +     #adjust this as needed to fit data
+    geom_boxplot() +
+    theme_minimal() +
+    labs(x = NULL, y = NULL) +
+    scale_fill_manual(values = c("New River (NR)" = "#ED97CAFF", "Triploid" = "#A8786EFF", "Stump Sound (SS)" = "#CDCC5DFF", "Cedar Island (CI)" = "#6DCCDAFF"))+
+    facet_grid(.~ Strain)
+  
+  return(splot)
+}
+
+MortCurve <-Mortality(S_Combined[S_Combined$Source == "Duke Aquafarm",])
+
+#ggsave("/home/moviac/Documents/School/Duke/Bass/Winter 2026/PosterFigs/CMASTMortBxes.png", plot = MortCurve, width = 10, height = 5)
+
+MortCurve +
+  theme_minimal() +
+  theme(
+  panel.border = element_rect(color = "#767676", fill = NA, linewidth = 0.4)
+) 
+
+# ggsave("mortstumpwlegend.jpeg")
+
+Mortality <- function(dframe) {
+  ggplot(dframe, aes(x = Month, y = Mortality_Count, fill = Strain)) +
+    geom_boxplot() +
+    facet_grid(Strain ~ Source) +   # facet by farm/source
+    theme_minimal() +
+    labs(x = NULL, y = NULL) +
+    scale_fill_manual(
+      values = c(
+        "NR" = "#ED97CAFF",
+        "Triploid" = "#A8786EFF",
+        "SS" = "#CDCC5DFF",
+        "CI" = "#6DCCDAFF"
+      )
+    )
+}
+
+# Use all farms at once
+MortCurve <- Mortality(S_Combined)
+
+MortCurve +
+  theme(
+    panel.border = element_rect(color = "#767676", fill = NA, linewidth = 0.4)
+  ) +
+    theme(legend.position = "none")
+
+
+
 ```
 ```{r}
 
-temp_plot <- cmast_all %>%
-  filter(Parameter == "Temperature") %>%
-  ggplot(aes(x = OverlayTime,
-             y = Value,
-             color = ColorGroup,
-             group = ColorGroup)) +
-  geom_line() +
-  scale_color_manual(values = color_palette) +
-  scale_x_datetime(date_labels = "%b %d") +
-  labs(x = NULL, y = NULL) +
-  theme_minimal() +
-  theme(
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank(),
-    legend.position = "none"
+S_Filtered <- S_Combined %>%
+  dplyr::filter(
+    !.data$Source %in% c("Stump Sound", "Nelson Bay"),
+    .data$Strain %in% c("NR", "Triploid")
   )
 
-do_plot <- cmast_all %>%
-  filter(Parameter == "Dissolved Oxygen") %>%
-  ggplot(aes(x = OverlayTime,
-             y = Value,
-             color = ColorGroup,
-             group = ColorGroup)) +
-  geom_line() +
-  scale_color_manual(values = color_palette) +
-  scale_x_datetime(date_labels = "%b %d") +
-  labs(x = "Date", y = NULL) +
-  theme_minimal() +
-  theme(legend.position = "none")
+Mortality <- function(dframe) {
+  ggplot(dframe, aes(x = Month, y = Mortality_Count, fill = Strain)) +
+    geom_boxplot() +
+    facet_grid(Strain ~ Source) +
+    theme_minimal() +
+    labs(x = NULL, y = NULL) +
+    scale_fill_manual(
+      values = c(
+        "NR" = "#ED97CAFF",
+        "Triploid" = "#A8786EFF"
+      )
+    )
+}
 
-ph_plot <- cmast_all %>%
-  filter(Parameter == "pH") %>%
-  ggplot(aes(x = OverlayTime,
-             y = Value,
-             color = ColorGroup,
-             group = ColorGroup)) +
-  geom_line() +
-  scale_color_manual(values = color_palette) +
-  scale_x_datetime(date_labels = "%b %d") +
-  labs(x = NULL, y = NULL) +
-  theme_minimal() +
+MortCurve <- Mortality(S_Filtered)
+
+MortCurve +
   theme(
-    axis.text.y = element_blank(),
-    axis.ticks.y = element_blank(),
+    panel.border = element_rect(color = "#767676", fill = NA, linewidth = 0.4),
     legend.position = "none"
   )
-
-sal_plot <- cmast_all %>%
-  filter(Parameter == "Salinity") %>%
-  ggplot(aes(x = OverlayTime,
-             y = Value,
-             color = ColorGroup,
-             group = ColorGroup)) +
-  geom_line() +
-  scale_color_manual(values = color_palette) +
-  scale_x_datetime(date_labels = "%b %d") +
-  labs(x = "Date", y = NULL, color = "Parameter & Year") +
-  theme_minimal()
-
-(temp_plot / do_plot) | (ph_plot / sal_plot)
 
 ```
 
