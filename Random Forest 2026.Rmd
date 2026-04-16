@@ -1,0 +1,56 @@
+---
+title: "Random Forest 2026"
+author: "Annabelle Dyer"
+date: "2026-03-17"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+library(rfPermute)
+library(randomForest)
+library(ggplot2)
+library(ggrepel)
+
+#analysis
+
+rp <- rfPermute(ATTRIBUTE_Phenotype ~., data = porites_standardized_phenotype, na.action = na.omit, ntree = 100, num.rep = 10)
+#predicts Phenotype using all other columns (. represents all other columns)
+#increase ntree and num.rep until results are accurate 
+Rp
+#displays confusion matrix
+#Extract variable importance
+importance_df <- as.data.frame(importance(rp))
+importance_df$Variable <- rownames(importance_df)
+
+#displaying results
+
+# Extract variable importance and sort by MeanDecreaseAccuracy
+importance_df <- as.data.frame(importance(rp))
+importance_df$Variable <- rownames(importance_df)
+importance_df <- importance_df[order(-importance_df$MeanDecreaseAccuracy), ]  # Sort in descending order
+
+# Keep only the top 100 most important variables
+top_100_importance <- importance_df[1:100, ]
+
+# Create a color column based on B and NB values
+top_100_importance$Color <- ifelse(top_100_importance$B > top_100_importance$NB, "orange", "blue")
+
+# Create variable importance plot
+ggplot(top_100_importance, aes(x = reorder(Variable, MeanDecreaseAccuracy), y = MeanDecreaseAccuracy, fill = Color)) +
+  geom_bar(stat = "identity", alpha = 0.7) +
+  scale_fill_identity() +  # Uses the exact colors specified in the data
+  theme_minimal() +
+  labs(title = "Top 100 Variable Importance Plot",
+       x = "Variables",
+       y = "Mean Decrease in Accuracy") +
+  theme(axis.text.y = element_blank()) +
+  geom_text_repel(aes(label = ifelse(rank(-MeanDecreaseAccuracy) <= 10, Variable, "")),
+                  hjust = 0, size = 3, nudge_y = 0.1)
+
+```
+
