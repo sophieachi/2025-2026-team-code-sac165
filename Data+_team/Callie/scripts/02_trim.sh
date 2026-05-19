@@ -12,7 +12,11 @@
 #SBATCH --mail-user=callie.hundley@duke.edu
 
 # Load modules 
-module load Trim_galore
+#module load Trim_galore
+# activate environment 
+conda activate RNA-seq
+
+echo "Using the version of Trim galore!" | {trim_galore -V}
 
 ## Set Paths ## 
 RAW_DIR=/work/clh162/OysterRNA24/rawreads
