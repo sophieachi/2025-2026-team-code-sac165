@@ -2,8 +2,8 @@
 #SBATCH --job-name=trim_fastqc_array
 #SBATCH --time=7-00:00:00
 #SBATCH --array=1-36
-#SBATCH --output=logs/fastqc_%a.out
-#SBATCH --error=logs/fastqc_%a.err
+#SBATCH --output=logs/trim_fastqc_%a.out
+#SBATCH --error=logs/trim_fastqc_%a.err
 #SBATCH --partition=common
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=8
