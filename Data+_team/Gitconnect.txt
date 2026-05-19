@@ -1,0 +1,16 @@
+# How to push to Git repository from the command line 
+
+git init
+
+git add <filename>
+    # staging all changes made to a specific file/folder
+    # If you use a `.` instead of a specific <filename> then it will stage all changes made to any file/folder edited since last push
+
+git status 
+    # See the files/materials that have been stages and are ready to push 
+
+git commit -m "message"
+    # Commit these changes with a message of what you are adding
+
+git push
+    # Push the staged changes to the main branch (after this updates will be present on GitHub - unless there are conflicts!)
