@@ -2,8 +2,8 @@
 #SBATCH --job-name=fastqc_array
 #SBATCH --time=7-00:00:00
 #SBATCH --array=1-36
-#SBATCH --output=logs/fastqc_%A_%a.out
-#SBATCH --error=logs/fastqc_%A_%a.err
+#SBATCH --output=logs/fastqc_%a.out
+#SBATCH --error=logs/fastqc_%a.err
 #SBATCH --partition=common
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=8
