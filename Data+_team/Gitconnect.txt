@@ -1,6 +1,7 @@
 # How to push to Git repository from the command line 
 
-git init
+git clone <http of repository>
+    # first need to ensure that you have cloned this git repository to your local machine
 
 git add <filename>
     # staging all changes made to a specific file/folder
