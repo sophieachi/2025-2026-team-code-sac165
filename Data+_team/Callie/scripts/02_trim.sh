@@ -2,8 +2,8 @@
 #SBATCH --job-name=trimreads_array
 #SBATCH --time=7-00:00:00
 #SBATCH --array=1-36
-#SBATCH --output=logs/trimreads_%A_%a.out
-#SBATCH --error=logs/trimreads_%A_%a.err
+#SBATCH --output=/work/clh162/OysterRNA24/logs/trimreads_%A_%a.out
+#SBATCH --error=/work/clh162/OysterRNA24/logs/trimreads_%A_%a.err
 #SBATCH --partition=common
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=8

@@ -1,8 +1,8 @@
 #!/bin/bash -e
 #SBATCH --job-name=multiqc_array
 #SBATCH --time=01:00:00
-#SBATCH --output=logs/multiqc_%a.out
-#SBATCH --error=logs/multiqc_%a.err
+#SBATCH --output=/work/clh162/OysterRNA24/logs/multiqc_%a.out
+#SBATCH --error=/work/clh162/OysterRNA24/logs/multiqc_%a.err
 #SBATCH --partition=common
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=4
