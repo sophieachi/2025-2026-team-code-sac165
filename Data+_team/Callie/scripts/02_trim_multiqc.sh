@@ -1,7 +1,6 @@
 #!/bin/bash -e
-#SBATCH --job-name=trim_multiqc_array
+#SBATCH --job-name=trim_multiqc
 #SBATCH --time=7-00:00:00
-#SBATCH --array=1-36
 #SBATCH --output=/work/clh162/OysterRNA24/logs/trim_multiqc_%a.out
 #SBATCH --error=/work/clh162/OysterRNA24/logs/trim_multiqc_%a.err
 #SBATCH --partition=common
