@@ -11,13 +11,12 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=callie.hundley@duke.edu
 
-# Load modules 
-#module load Trim_galore
-# activate environment 
+
+## activate RNA-seq environment with updated version (2.0) of Trim Galore! ##
 source /hpc/home/clh162/miniconda3/etc/profile.d/conda.sh
-# conda init
 conda activate RNA-seq
 
+# ensure correct version is functioning
 trim_galore -V
 
 ## Set Paths ## 
@@ -43,5 +42,8 @@ trim_galore \
     --paired ${R1} ${R2} \
     --quality 30 \
     --output_dir $TRIMMED_DIR  
+
+# even though the Trim Galore manual says that it doesn't support globbing (what we are doing above) this code is working
+
 
 echo "Trimming completed for ${SAMPLE}"

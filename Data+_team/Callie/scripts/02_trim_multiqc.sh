@@ -11,9 +11,19 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=callie.hundley@duke.edu
 
+# Activate conda environment containing RNA-seq package
+source /hpc/home/clh162/miniconda3/etc/profile.d/conda.sh
+conda activate RNA-seq
+
 ## Set paths ##
+FASTQC_OUT=/work/clh162/OysterRNA24/fastqc_trimmed
+MULTIQC_OUT=/work/clh162/OysterRNA24/multiqc_report_trimmed
+mkdir -p $MULTIQC_OUT
 
 
 ## Run MultiQC ##
+multiqc $FASTQC_OUT -o $MULTIQC_OUT
+echo "MultiQC complete!"
 
+conda deactivate
 

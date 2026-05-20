@@ -11,7 +11,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=callie.hundley@duke.edu
 
-# Load module
+## Load module ##
 module load FastQC
 
 ## Set paths ##
@@ -20,10 +20,20 @@ FASTQC_OUT=/work/clh162/OysterRNA24/fastqc_trimmed
 mkdir -p $FASTQC_OUT
 
 ## Set up direction/path to each sample ##
+SAMPLES=($(ls ${RAW_DIR}/*_R1_001.fastq.gz | sed 's/_R1_001.fastq.gz//' | xargs -n 1 basename))
+
+# Index an individual sample from the list for this array task
+SAMPLE=${SAMPLES[$SLURM_ARRAY_TASK_ID-1]}
+
+# Define R1 and R2 for the sample 
+R1=${RAW_DIR}/${SAMPLE}_R1_001.fastq.gz
+R2=${RAW_DIR}/${SAMPLE}_R2_001.fastq.gz
+
 
 ## Run FastQC on Trimmed Samples ##
 ## Run FastQC ##
 echo "Running FastQC for sample: ${SAMPLE}"
+
 fastqc -o ${FASTQC_OUT} -t ${SLURM_CPUS_PER_TASK} ${R1} ${R2}
 
 echo "FastQC complete for sample: ${SAMPLE}"
