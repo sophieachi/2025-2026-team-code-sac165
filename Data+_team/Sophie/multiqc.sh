@@ -22,3 +22,5 @@ mkdir -p $MULTIQC_OUTPUT_DIR
 
 # run multiqc
 multiqc $FASTQC_OUTPUT_DIR -o $MULTIQC_OUTPUT_DIR
+
+echo "MultiQC complete"

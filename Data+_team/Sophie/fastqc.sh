@@ -22,3 +22,5 @@ mkdir -p $FASTQC_OUTPUT_DIR
 
 # run fastqc on the raw reads and put them in the output folder
 fastqc $RAW_DIR/*.fastq.gz -o $FASTQC_OUTPUT_DIR
+
+echo "FastQC complete"
